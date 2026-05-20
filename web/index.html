@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="NeuroScribe — A premium CNN-based handwritten character recognition system with 3D visualizations, live inference, and comprehensive training analytics.">
+  <title>NeuroScribe — Handwritten Character Recognition</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ==================== NAVIGATION ==================== -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">
+        <div class="nav-logo-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a7 7 0 0 1 7 7c0 2.5-1.3 4.8-3.4 6.2L12 18l-3.6-2.8A7 7 0 0 1 12 2z"/>
+            <path d="M12 18v4"/><circle cx="12" cy="9" r="2"/>
+          </svg>
+        </div>
+        <span class="nav-logo-text">NeuroScribe</span>
+      </a>
+
+      <ul class="nav-links" id="nav-links">
+        <li><a href="#architecture">Architecture</a></li>
+        <li><a href="#demo">Live Demo</a></li>
+        <li><a href="#metrics">Metrics</a></li>
+        <li><a href="#confusion-matrix">Confusion</a></li>
+        <li><a href="#roc">ROC Analysis</a></li>
+        <li><a href="#crnn-roadmap">CRNN Roadmap</a></li>
+      </ul>
+
+      <div class="nav-mobile-toggle" id="nav-toggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ==================== HERO ==================== -->
+  <section class="hero" id="hero">
+    <div class="hero-canvas-container" id="hero-canvas-container"></div>
+
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        Deep Learning &middot; Computer Vision &middot; CNN
+      </div>
+
+      <h1 class="hero-title">Handwritten Character Recognition</h1>
+      <p class="hero-subtitle">Powered by deep convolutional neural networks — achieving state-of-the-art accuracy on MNIST &amp; EMNIST benchmarks with a scalable architecture.</p>
+
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="hero-stat-value" data-target="99.2" data-suffix="%">0%</div>
+          <div class="hero-stat-label">MNIST Accuracy</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-value" data-target="87.3" data-suffix="%">0%</div>
+          <div class="hero-stat-label">EMNIST Accuracy</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-value" data-target="390" data-suffix="K">0K</div>
+          <div class="hero-stat-label">Parameters</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="scroll-indicator">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ==================== ARCHITECTURE ==================== -->
+  <section class="section" id="architecture">
+    <div class="container">
+      <div class="section-header fade-up">
+        <span class="section-tag">Model Design</span>
+        <h2 class="section-title">CNN Architecture</h2>
+        <p class="section-desc">A 3-block convolutional neural network optimized for handwritten character feature extraction with batch normalization and adaptive pooling.</p>
+      </div>
+
+      <div class="architecture-grid">
+        <div class="arch-viewer fade-up" id="arch-viewer">
+          <div class="arch-controls-hint">🖱️ Drag to rotate &middot; Scroll to zoom</div>
+        </div>
+
+        <div class="layer-details fade-up stagger-children" id="layer-details">
+          <div class="layer-card" data-layer="0">
+            <span class="layer-dot input"></span>
+            <span class="layer-name">Input</span>
+            <span class="layer-shape">1×28×28</span>
+            <span class="layer-params">—</span>
+          </div>
+          <div class="layer-card" data-layer="1">
+            <span class="layer-dot conv"></span>
+            <span class="layer-name">Conv2d</span>
+            <span class="layer-shape">32×28×28</span>
+            <span class="layer-params">320</span>
+          </div>
+          <div class="layer-card" data-layer="2">
+            <span class="layer-dot bn"></span>
+            <span class="layer-name">BatchNorm</span>
+            <span class="layer-shape">32×28×28</span>
+            <span class="layer-params">64</span>
+          </div>
+          <div class="layer-card" data-layer="3">
+            <span class="layer-dot act"></span>
+            <span class="layer-name">ReLU</span>
+            <span class="layer-shape">32×28×28</span>
+            <span class="layer-params">—</span>
+          </div>
+          <div class="layer-card" data-layer="4">
+            <span class="layer-dot pool"></span>
+            <span class="layer-name">MaxPool2d</span>
+            <span class="layer-shape">32×14×14</span>
+            <span class="layer-params">—</span>
+          </div>
+          <div class="layer-card" data-layer="5">
+            <span class="layer-dot conv"></span>
+            <span class="layer-name">Conv2d</span>
+            <span class="layer-shape">64×14×14</span>
+            <span class="layer-params">18,496</span>
+          </div>
+          <div class="layer-card" data-layer="6">
+            <span class="layer-dot bn"></span>
+            <span class="layer-name">BatchNorm</span>
+            <span class="layer-shape">64×14×14</span>
+            <span class="layer-params">128</span>
+          </div>
+          <div class="layer-card" data-layer="7">
+            <span class="layer-dot act"></span>
+            <span class="layer-name">ReLU</span>
+            <span class="layer-shape">64×14×14</span>
+            <span class="layer-params">—</span>
+          </div>
+          <div class="layer-card" data-layer="8">
+            <span class="layer-dot pool"></span>
+            <span class="layer-name">MaxPool2d</span>
+            <span class="layer-shape">64×7×7</span>
+            <span class="layer-params">—</span>
+          </div>
+          <div class="layer-card" data-layer="9">
+            <span class="layer-dot conv"></span>
+            <span class="layer-name">Conv2d</span>
+            <span class="layer-shape">128×7×7</span>
+            <span class="layer-params">73,856</span>
+          </div>
+          <div class="layer-card" data-layer="10">
+            <span class="layer-dot bn"></span>
+            <span class="layer-name">BatchNorm</span>
+            <span class="layer-shape">128×7×7</span>
+            <span class="layer-params">256</span>
+          </div>
+          <div class="layer-card" data-layer="11">
+            <span class="layer-dot act"></span>
+            <span class="layer-name">ReLU</span>
+            <span class="layer-shape">128×7×7</span>
+            <span class="layer-params">—</span>
+          </div>
+          <div class="layer-card" data-layer="12">
+            <span class="layer-dot pool"></span>
+            <span class="layer-name">AdaptiveAvgPool</span>
+            <span class="layer-shape">128×3×3</span>
+            <span class="layer-params">—</span>
+          </div>
+          <div class="layer-card" data-layer="13">
+            <span class="layer-dot flat"></span>
+            <span class="layer-name">Flatten</span>
+            <span class="layer-shape">1,152</span>
+            <span class="layer-params">—</span>
+          </div>
+          <div class="layer-card" data-layer="14">
+            <span class="layer-dot dense"></span>
+            <span class="layer-name">Linear</span>
+            <span class="layer-shape">256</span>
+            <span class="layer-params">295,168</span>
+          </div>
+          <div class="layer-card" data-layer="15">
+            <span class="layer-dot drop"></span>
+            <span class="layer-name">Dropout (0.5)</span>
+            <span class="layer-shape">256</span>
+            <span class="layer-params">—</span>
+          </div>
+          <div class="layer-card" data-layer="16">
+            <span class="layer-dot dense"></span>
+            <span class="layer-name">Output</span>
+            <span class="layer-shape">10 / 62</span>
+            <span class="layer-params">2,570</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== LIVE DEMO ==================== -->
+  <section class="section" id="demo">
+    <div class="container">
+      <div class="section-header fade-up">
+        <span class="section-tag">Interactive</span>
+        <h2 class="section-title">Live Recognition Demo</h2>
+        <p class="section-desc">Draw a character or digit on the canvas and watch the model predict in real-time. The neural network processes your input through 3 convolutional blocks.</p>
+      </div>
+
+      <div class="demo-grid">
+        <div class="canvas-wrapper fade-up">
+          <div class="drawing-canvas-container">
+            <canvas id="drawing-canvas" width="400" height="400"></canvas>
+          </div>
+          <div class="canvas-controls">
+            <button class="btn btn-primary" id="btn-clear">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -3px; margin-right: 6px;"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>
+              Clear
+            </button>
+            <button class="btn btn-secondary" id="btn-undo">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -3px; margin-right: 6px;"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+              Undo
+            </button>
+          </div>
+          <div class="dataset-toggle">
+            <button class="active" data-dataset="mnist">MNIST (Digits)</button>
+            <button data-dataset="emnist">EMNIST (All)</button>
+          </div>
+        </div>
+
+        <div class="prediction-panel fade-up">
+          <div class="glass-card prediction-main" id="prediction-main">
+            <div class="prediction-empty" id="prediction-empty">
+              <div class="prediction-empty-icon">✍️</div>
+              <p>Draw a character to see predictions</p>
+            </div>
+            <div id="prediction-result" style="display:none;">
+              <div class="confidence-gauge" id="confidence-gauge">
+                <svg width="160" height="160" viewBox="0 0 160 160">
+                  <circle cx="80" cy="80" r="70" fill="none" stroke="rgba(99,102,241,0.1)" stroke-width="10"/>
+                  <circle id="gauge-arc" cx="80" cy="80" r="70" fill="none" stroke="url(#gaugeGrad)" stroke-width="10" stroke-linecap="round" stroke-dasharray="0 440"/>
+                  <defs>
+                    <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stop-color="#6366F1"/>
+                      <stop offset="100%" stop-color="#8B5CF6"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div class="confidence-gauge-text" id="gauge-text">0%</div>
+              </div>
+              <div class="prediction-char" id="prediction-char">?</div>
+              <div class="prediction-confidence">Confidence: <span id="prediction-conf-value">0%</span></div>
+            </div>
+          </div>
+
+          <div class="glass-card">
+            <h3 style="font-family: var(--font-heading); font-weight: 700; font-size: 1rem; margin-bottom: 16px; color: var(--text-primary);">Top 5 Predictions</h3>
+            <div class="prediction-bars" id="prediction-bars">
+              <!-- Filled dynamically -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== TRAINING METRICS ==================== -->
+  <section class="section" id="metrics">
+    <div class="container">
+      <div class="section-header fade-up">
+        <span class="section-tag">Performance</span>
+        <h2 class="section-title">Training Metrics</h2>
+        <p class="section-desc">Comprehensive training analytics across MNIST and EMNIST datasets, showing convergence behavior and final performance.</p>
+      </div>
+
+      <div class="metrics-summary fade-up">
+        <div class="glass-card metric-card">
+          <div class="metric-card-header">
+            <span class="metric-card-title">MNIST</span>
+            <span class="metric-card-badge mnist">10 Classes</span>
+          </div>
+          <div class="metric-stats">
+            <div class="metric-stat">
+              <div class="metric-stat-value" id="mnist-accuracy">99.23%</div>
+              <div class="metric-stat-label">Test Accuracy</div>
+            </div>
+            <div class="metric-stat">
+              <div class="metric-stat-value" id="mnist-epochs">15</div>
+              <div class="metric-stat-label">Epochs</div>
+            </div>
+            <div class="metric-stat">
+              <div class="metric-stat-value" id="mnist-params">335K</div>
+              <div class="metric-stat-label">Parameters</div>
+            </div>
+            <div class="metric-stat">
+              <div class="metric-stat-value" id="mnist-time">5m 42s</div>
+              <div class="metric-stat-label">Training Time</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card metric-card">
+          <div class="metric-card-header">
+            <span class="metric-card-title">EMNIST</span>
+            <span class="metric-card-badge emnist">62 Classes</span>
+          </div>
+          <div class="metric-stats">
+            <div class="metric-stat">
+              <div class="metric-stat-value" id="emnist-accuracy">87.34%</div>
+              <div class="metric-stat-label">Test Accuracy</div>
+            </div>
+            <div class="metric-stat">
+              <div class="metric-stat-value" id="emnist-epochs">20</div>
+              <div class="metric-stat-label">Epochs</div>
+            </div>
+            <div class="metric-stat">
+              <div class="metric-stat-value" id="emnist-params">545K</div>
+              <div class="metric-stat-label">Parameters</div>
+            </div>
+            <div class="metric-stat">
+              <div class="metric-stat-value" id="emnist-time">30m 47s</div>
+              <div class="metric-stat-label">Training Time</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Training Curves -->
+      <div class="toggle-group">
+        <div class="dataset-toggle" id="metrics-toggle">
+          <button class="active" data-dataset="mnist">MNIST</button>
+          <button data-dataset="emnist">EMNIST</button>
+        </div>
+      </div>
+
+      <div class="charts-grid fade-up">
+        <div class="chart-container">
+          <div class="chart-title">Loss Curve</div>
+          <div class="chart-canvas-wrapper">
+            <canvas id="loss-chart" width="560" height="340"></canvas>
+          </div>
+        </div>
+        <div class="chart-container">
+          <div class="chart-title">Accuracy Curve</div>
+          <div class="chart-canvas-wrapper">
+            <canvas id="accuracy-chart" width="560" height="340"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CONFUSION MATRIX ==================== -->
+  <section class="section" id="confusion-matrix">
+    <div class="container">
+      <div class="section-header fade-up">
+        <span class="section-tag">Analysis</span>
+        <h2 class="section-title">Confusion Matrix</h2>
+        <p class="section-desc">Visualizing prediction patterns — where the model excels and where similar characters create confusion.</p>
+      </div>
+
+      <div class="toggle-group">
+        <div class="dataset-toggle" id="confusion-toggle">
+          <button class="active" data-dataset="mnist">MNIST</button>
+          <button data-dataset="emnist">EMNIST (Top Confusions)</button>
+        </div>
+      </div>
+
+      <div class="confusion-canvas-container fade-up">
+        <div class="confusion-canvas-wrapper" id="confusion-wrapper">
+          <canvas id="confusion-chart" width="650" height="650"></canvas>
+        </div>
+        <div class="confusion-tooltip" id="confusion-tooltip"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== ROC CURVES ==================== -->
+  <section class="section" id="roc">
+    <div class="container">
+      <div class="section-header fade-up">
+        <span class="section-tag">Evaluation</span>
+        <h2 class="section-title">ROC Curves &amp; AUC</h2>
+        <p class="section-desc">Receiver Operating Characteristic curves showing per-class discrimination ability with Area Under the Curve scores.</p>
+      </div>
+
+      <div class="toggle-group">
+        <div class="dataset-toggle" id="roc-toggle">
+          <button class="active" data-dataset="mnist">MNIST</button>
+          <button data-dataset="emnist">EMNIST</button>
+        </div>
+      </div>
+
+      <div class="roc-grid fade-up">
+        <div class="chart-container">
+          <div class="chart-canvas-wrapper">
+            <canvas id="roc-chart" width="700" height="500"></canvas>
+          </div>
+        </div>
+        <div class="auc-cards" id="auc-cards">
+          <!-- Filled dynamically -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PER-CLASS PERFORMANCE ==================== -->
+  <section class="section" id="per-class">
+    <div class="container">
+      <div class="section-header fade-up">
+        <span class="section-tag">Breakdown</span>
+        <h2 class="section-title">Per-Class Performance</h2>
+        <p class="section-desc">Precision, recall, and F1 scores for each character class — identifying which characters the model handles best.</p>
+      </div>
+
+      <div class="toggle-group">
+        <div class="dataset-toggle" id="perclass-toggle">
+          <button class="active" data-dataset="mnist">MNIST</button>
+          <button data-dataset="emnist">EMNIST</button>
+        </div>
+      </div>
+
+      <div class="per-class-chart-container fade-up">
+        <div class="per-class-canvas-wrapper">
+          <canvas id="perclass-chart" width="860" height="400"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CRNN ROADMAP ==================== -->
+  <section class="section" id="crnn-roadmap">
+    <div class="container">
+      <div class="section-header fade-up">
+        <span class="section-tag">Extensibility</span>
+        <h2 class="section-title">CRNN Scaling Roadmap</h2>
+        <p class="section-desc">From single-character recognition to full word and sentence understanding — the path to production OCR.</p>
+      </div>
+
+      <div class="roadmap-pipeline fade-up">
+        <div class="pipeline-stage current glass-card">
+          <span class="pipeline-stage-badge done">✓ Done</span>
+          <div class="pipeline-stage-icon">🧠</div>
+          <div class="pipeline-stage-name">CNN</div>
+          <div class="pipeline-stage-desc">Feature Extraction</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-stage future glass-card">
+          <span class="pipeline-stage-badge planned">Phase 2</span>
+          <div class="pipeline-stage-icon">🔄</div>
+          <div class="pipeline-stage-name">BiLSTM</div>
+          <div class="pipeline-stage-desc">Sequence Modeling</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-stage future glass-card">
+          <span class="pipeline-stage-badge planned">Phase 3</span>
+          <div class="pipeline-stage-icon">🎯</div>
+          <div class="pipeline-stage-name">CTC Decoder</div>
+          <div class="pipeline-stage-desc">Temporal Classification</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-stage future glass-card">
+          <span class="pipeline-stage-badge planned">Phase 4</span>
+          <div class="pipeline-stage-icon">📝</div>
+          <div class="pipeline-stage-name">Word Output</div>
+          <div class="pipeline-stage-desc">Full Text Recognition</div>
+        </div>
+      </div>
+
+      <div class="roadmap-details fade-up stagger-children">
+        <div class="glass-card roadmap-card">
+          <div class="roadmap-card-header">
+            <div class="roadmap-card-icon" style="background: rgba(99,102,241,0.1); color: var(--indigo);">🔗</div>
+            <div class="roadmap-card-title">Map-to-Sequence Layer</div>
+          </div>
+          <div class="roadmap-card-body">
+            Reshape CNN feature maps from spatial grids to sequential features. Each column becomes a timestep, creating a natural left-to-right reading order.
+            <ul>
+              <li>(B, C, H, W) → (B, W, C×H)</li>
+              <li>Preserves spatial locality</li>
+              <li>Variable-width input support</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="glass-card roadmap-card">
+          <div class="roadmap-card-header">
+            <div class="roadmap-card-icon" style="background: rgba(139,92,246,0.1); color: var(--violet);">🔄</div>
+            <div class="roadmap-card-title">Bidirectional LSTM</div>
+          </div>
+          <div class="roadmap-card-body">
+            Two stacked BiLSTM layers with 256 hidden units capture context from both directions — essential for ambiguous characters resolved by surrounding context.
+            <ul>
+              <li>2-layer, hidden_size=256</li>
+              <li>Forward + backward context</li>
+              <li>Output: per-timestep probabilities</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="glass-card roadmap-card">
+          <div class="roadmap-card-header">
+            <div class="roadmap-card-icon" style="background: rgba(6,182,212,0.1); color: var(--cyan);">📊</div>
+            <div class="roadmap-card-title">CTC Loss &amp; Decoding</div>
+          </div>
+          <div class="roadmap-card-body">
+            Connectionist Temporal Classification handles alignment-free training. Beam search decoding with optional language model integration for production accuracy.
+            <ul>
+              <li>No explicit segmentation needed</li>
+              <li>Blank token for spacing</li>
+              <li>Beam search + LM rescoring</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="glass-card roadmap-card">
+          <div class="roadmap-card-header">
+            <div class="roadmap-card-icon" style="background: rgba(245,158,11,0.1); color: var(--amber);">⚡</div>
+            <div class="roadmap-card-title">Training Data &amp; Transfer</div>
+          </div>
+          <div class="roadmap-card-body">
+            Leverage the trained CNN backbone with frozen weights, then fine-tune on word-level datasets like IAM Handwriting (115K words).
+            <ul>
+              <li>IAM, RIMES, CVL datasets</li>
+              <li>Phase: freeze CNN → train LSTM → fine-tune all</li>
+              <li>Expected: ~8% CER on IAM</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-logo">NeuroScribe</div>
+        <p class="footer-text">CNN-based Handwritten Character Recognition System &middot; MNIST &amp; EMNIST</p>
+        <ul class="footer-links">
+          <li><a href="#architecture">Architecture</a></li>
+          <li><a href="#demo">Demo</a></li>
+          <li><a href="#metrics">Metrics</a></li>
+          <li><a href="https://github.com" target="_blank" rel="noopener">GitHub</a></li>
+        </ul>
+        <p class="footer-text" style="font-size: 0.75rem; margin-top: 8px;">Built with PyTorch, Three.js &amp; TensorFlow.js</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== SCRIPTS ==================== -->
+  <!-- Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+
+  <!-- TF.js and Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- App Scripts -->
+  <script src="js/three-scene.js"></script>
+  <script src="js/architecture.js"></script>
+  <script src="js/canvas.js"></script>
+  <script src="js/inference.js"></script>
+  <script src="js/visualizations.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
