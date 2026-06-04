@@ -38,7 +38,10 @@ const InferenceModel = (() => {
         console.log('✓ Model loaded successfully');
         
         // Warm up the model
-        const dummy = tf.zeros([1, 28, 28, 1]);
+        // Dynamically get the expected shape (e.g., [null, 784] or [null, 28, 28, 1])
+        const inputShape = model.inputs[0].shape;
+        const warmupShape = [1, ...inputShape.slice(1)];
+        const dummy = tf.zeros(warmupShape);
         model.predict(dummy);
         dummy.dispose();
         
@@ -63,10 +66,15 @@ const InferenceModel = (() => {
     }
     
     try {
-      // Model expects [1, 28, 28, 1]
-      const prediction = model.predict(tensor);
+      // Dynamically reshape tensor to match model's expected input shape
+      const inputShape = model.inputs[0].shape;
+      const targetShape = [1, ...inputShape.slice(1)];
+      const reshapedTensor = tensor.reshape(targetShape);
+      
+      const prediction = model.predict(reshapedTensor);
       const probabilities = await prediction.data();
       prediction.dispose();
+      reshapedTensor.dispose();
       
       // Get top 5
       const top5 = Array.from(probabilities)
