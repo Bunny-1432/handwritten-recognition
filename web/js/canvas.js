@@ -5,7 +5,7 @@ class DrawingCanvas {
   constructor(canvasId, options = {}) {
     this.canvas = document.getElementById(canvasId);
     if (!this.canvas) return;
-    this.ctx = this.canvas.getContext('2d');
+    this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
     
     // Config
     this.brushSize = options.brushSize || 18;
