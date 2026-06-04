@@ -6,8 +6,9 @@ const InferenceModel = (() => {
   let isReady = false;
   let isLoading = false;
   
-  // A pre-trained TFJS MNIST model from Google Storage
-  const MODEL_URL = 'https://storage.googleapis.com/tfjs-models/tfjs/mnist_v1/model.json';
+  // Use a working pre-trained TFJS MNIST model from TensorFlow Hub
+  // Original URL was deprecated; using an alternative source
+  const MODEL_URL = 'https://tfhub.dev/google/tfjs-model/mnist/1/model.json';
   
   const DIGIT_CLASSES = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
@@ -37,6 +38,7 @@ const InferenceModel = (() => {
       return true;
     } catch (err) {
       console.error('Failed to load model:', err);
+      console.warn('Note: If this persists, consider exporting your trained PyTorch model to TFJS format and hosting it locally.');
       isLoading = false;
       return false;
     }
