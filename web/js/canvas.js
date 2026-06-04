@@ -139,32 +139,81 @@ class DrawingCanvas {
   getPreprocessedTensor(tf) {
     if (!tf) return null;
     
-    // Create a temporary canvas for scaling
+    const originalCtx = this.ctx;
+    const imgDataFull = originalCtx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+    const dataFull = imgDataFull.data;
+    
+    // 1. Find bounding box of the drawing
+    let minX = this.canvas.width, minY = this.canvas.height, maxX = 0, maxY = 0;
+    let hasDrawn = false;
+    
+    for (let y = 0; y < this.canvas.height; y++) {
+      for (let x = 0; x < this.canvas.width; x++) {
+        const idx = (y * this.canvas.width + x) * 4;
+        const avg = (dataFull[idx] + dataFull[idx+1] + dataFull[idx+2]) / 3;
+        // Background is white (255), so drawn pixels have lower values
+        if (avg < 250) { 
+          hasDrawn = true;
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+    }
+    
+    if (!hasDrawn) return null; // Empty canvas
+    
+    // Add a small padding to the bounding box from the original canvas
+    const padding = 15;
+    minX = Math.max(0, minX - padding);
+    minY = Math.max(0, minY - padding);
+    maxX = Math.min(this.canvas.width, maxX + padding);
+    maxY = Math.min(this.canvas.height, maxY + padding);
+    
+    const boxWidth = maxX - minX;
+    const boxHeight = Math.max(1, maxY - minY);
+    
+    // Create a temporary canvas to hold just the bounded digit
+    const boxCanvas = document.createElement('canvas');
+    boxCanvas.width = boxWidth;
+    boxCanvas.height = boxHeight;
+    const boxCtx = boxCanvas.getContext('2d');
+    boxCtx.fillStyle = '#FFFFFF';
+    boxCtx.fillRect(0, 0, boxWidth, boxHeight);
+    boxCtx.drawImage(this.canvas, minX, minY, boxWidth, boxHeight, 0, 0, boxWidth, boxHeight);
+    
+    // 2. Scale into 20x20 preserving aspect ratio
+    const scale = 20.0 / Math.max(boxWidth, boxHeight);
+    const scaledWidth = boxWidth * scale;
+    const scaledHeight = boxHeight * scale;
+    
+    // 3. Center into 28x28
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = 28;
     tempCanvas.height = 28;
     const tempCtx = tempCanvas.getContext('2d');
+    tempCtx.fillStyle = '#FFFFFF';
+    tempCtx.fillRect(0, 0, 28, 28);
     
-    // We want to simulate the MNIST centering process here.
-    // For simplicity in this demo, we'll draw the scaled canvas directly,
-    // invert the colors (MNIST is white on black), and convert to tensor.
-    tempCtx.drawImage(this.canvas, 0, 0, 28, 28);
+    const dx = (28 - scaledWidth) / 2;
+    const dy = (28 - scaledHeight) / 2;
+    
+    // Draw the bounded image centered
+    tempCtx.drawImage(boxCanvas, 0, 0, boxWidth, boxHeight, dx, dy, scaledWidth, scaledHeight);
+    
     const imgData = tempCtx.getImageData(0, 0, 28, 28);
     const data = imgData.data;
     
     // Convert to grayscale and invert
     const grayscale = new Float32Array(28 * 28);
     for (let i = 0; i < data.length; i += 4) {
-      // average RGB, then invert (255 - val), then normalize 0-1
       const avg = (data[i] + data[i+1] + data[i+2]) / 3;
       const inverted = 255 - avg;
+      // Normalize to 0-1
       grayscale[i / 4] = inverted / 255.0;
     }
     
-    // Create tensor: shape [1, 1, 28, 28] (batch, channel, height, width) for PyTorch
-    // Or [1, 28, 28, 1] for typical TF models. Our exported model will likely expect TF format.
-    // We assume [1, 28, 28, 1] here for TFJS standard, but if exported from PyTorch as ONNX->TF it might be NCHW.
-    // Let's use [1, 28, 28, 1] and let inference handle reshaping if needed.
     return tf.tensor4d(grayscale, [1, 28, 28, 1]);
   }
 }
