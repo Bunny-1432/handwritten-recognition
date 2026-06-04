@@ -1,6 +1,9 @@
 /* ============================================================
    Main Application Logic
    ============================================================ */
+let currentDataset = 'mnist'; // 'mnist' or 'emnist'
+let drawingCanvas = null;
+
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Initialize Three.js Scenes
   ThreeScene.init(document.getElementById('hero-canvas-container'));
@@ -10,9 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await Visualizations.init();
 
   // 3. Initialize Drawing Canvas
-  let currentDataset = 'mnist'; // 'mnist' or 'emnist'
-  
-  const drawingCanvas = new DrawingCanvas('drawing-canvas', {
+  drawingCanvas = new DrawingCanvas('drawing-canvas', {
     onInteractionEnd: async (hasData) => {
       if (!hasData) {
         hidePrediction();
@@ -57,6 +58,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 6. Setup Scroll Animations & Observers
   setupScrollEffects();
+
+  // 7. Animate Hero Stats
+  animateHeroStats();
 });
 
 function showPrediction(predictions) {
@@ -146,7 +150,8 @@ function setupToggles() {
           }).catch(()=>{});
         } else {
           // Live demo toggle
-          if (typeof drawingCanvas !== 'undefined') drawingCanvas.clear();
+          currentDataset = dataset;
+          if (drawingCanvas) drawingCanvas.clear();
         }
       });
     });
@@ -179,5 +184,44 @@ function setupScrollEffects() {
   
   document.querySelectorAll('.layer-card').forEach(el => {
     archObserver.observe(el);
+  });
+}
+
+function animateHeroStats() {
+  const statValues = document.querySelectorAll('.hero-stat-value');
+  
+  statValues.forEach(el => {
+    const target = parseFloat(el.getAttribute('data-target'));
+    const suffix = el.getAttribute('data-suffix') || '';
+    const isInteger = !el.getAttribute('data-target').includes('.');
+    const duration = 1500; // 1.5 seconds
+    const startTime = performance.now();
+    
+    function update(currentTime) {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Easing: ease-out-quad
+      const easeProgress = progress * (2 - progress);
+      const currentVal = target * easeProgress;
+      
+      if (isInteger) {
+        el.textContent = Math.floor(currentVal).toLocaleString() + suffix;
+      } else {
+        el.textContent = currentVal.toFixed(1) + suffix;
+      }
+      
+      if (progress < 1) {
+        requestAnimationFrame(update);
+      } else {
+        if (isInteger) {
+          el.textContent = target.toLocaleString() + suffix;
+        } else {
+          el.textContent = target.toFixed(1) + suffix;
+        }
+      }
+    }
+    
+    requestAnimationFrame(update);
   });
 }

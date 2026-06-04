@@ -7,10 +7,10 @@ const InferenceModel = (() => {
   let isLoading = false;
   
   // List of working TFJS MNIST model URLs (in priority order)
-  // These are actively maintained by TensorFlow team
+  // These are actively maintained by TensorFlow team or hosted with permissive CORS
   const MODEL_URLS = [
-    'https://storage.googleapis.com/tfjs-models/savedmodel/mnist/model.json',  // Recommended
-    'https://tfhub.dev/google/tfjs-model/mnist/1/model.json',                  // Alternative
+    'data/model/model.json',                                                                 // Locally hosted model (offline/pre-trained)
+    'https://raw.githubusercontent.com/google/tfjs-mnist-workshop/master/model/model.json',  // Reliable remote fallback (supports file:// CORS)
   ];
   
   const DIGIT_CLASSES = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
