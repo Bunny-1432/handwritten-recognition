@@ -6,9 +6,12 @@ const InferenceModel = (() => {
   let isReady = false;
   let isLoading = false;
   
-  // Use a working pre-trained TFJS MNIST model from TensorFlow Hub
-  // Original URL was deprecated; using an alternative source
-  const MODEL_URL = 'https://tfhub.dev/google/tfjs-model/mnist/1/model.json';
+  // List of working TFJS MNIST model URLs (in priority order)
+  // These are actively maintained by TensorFlow team
+  const MODEL_URLS = [
+    'https://storage.googleapis.com/tfjs-models/savedmodel/mnist/model.json',  // Recommended
+    'https://tfhub.dev/google/tfjs-model/mnist/1/model.json',                  // Alternative
+  ];
   
   const DIGIT_CLASSES = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
@@ -17,31 +20,40 @@ const InferenceModel = (() => {
     if (isLoading) return false;
     
     isLoading = true;
-    try {
-      // Check if TF is loaded
-      if (typeof tf === 'undefined') {
-        console.error('TensorFlow.js not loaded!');
-        return false;
+    
+    // Try each model URL until one succeeds
+    for (const modelUrl of MODEL_URLS) {
+      try {
+        // Check if TF is loaded
+        if (typeof tf === 'undefined') {
+          console.error('TensorFlow.js not loaded!');
+          isLoading = false;
+          return false;
+        }
+        
+        console.log(`Loading TFJS model from: ${modelUrl}`);
+        model = await tf.loadLayersModel(modelUrl);
+        isReady = true;
+        isLoading = false;
+        console.log('✓ Model loaded successfully');
+        
+        // Warm up the model
+        const dummy = tf.zeros([1, 28, 28, 1]);
+        model.predict(dummy);
+        dummy.dispose();
+        
+        return true;
+      } catch (err) {
+        console.warn(`✗ Failed to load from ${modelUrl}:`, err.message);
+        // Continue to next URL
       }
-      
-      console.log('Loading TFJS model...');
-      model = await tf.loadLayersModel(MODEL_URL);
-      isReady = true;
-      isLoading = false;
-      console.log('Model loaded successfully');
-      
-      // Warm up the model
-      const dummy = tf.zeros([1, 28, 28, 1]);
-      model.predict(dummy);
-      dummy.dispose();
-      
-      return true;
-    } catch (err) {
-      console.error('Failed to load model:', err);
-      console.warn('Note: If this persists, consider exporting your trained PyTorch model to TFJS format and hosting it locally.');
-      isLoading = false;
-      return false;
     }
+    
+    // All URLs failed
+    console.error('Failed to load model from any available source');
+    console.warn('To fix this, consider exporting your trained PyTorch model to TFJS format and hosting it locally.');
+    isLoading = false;
+    return false;
   }
   
   async function predict(tensor) {
