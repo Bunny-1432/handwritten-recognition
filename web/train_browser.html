@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Train HandwrittenCNN in Browser</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+    #status { padding: 10px; background: #eee; margin-bottom: 20px; border-radius: 4px; }
+    #progress { height: 20px; background: #4CAF50; width: 0%; border-radius: 4px; transition: width 0.2s; }
+    .progress-bar { width: 100%; background: #ddd; border-radius: 4px; margin-top: 10px; overflow: hidden; }
+    button { padding: 10px 20px; font-size: 16px; cursor: pointer; background: #2196F3; color: white; border: none; border-radius: 4px; }
+    button:disabled { background: #ccc; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <h1>Train HandwrittenCNN (TF.js)</h1>
+  <p>This page downloads the MNIST dataset, trains the CNN model directly in the browser, and saves the resulting <code>model.json</code> and weights.</p>
+  
+  <div id="status">Ready to train.</div>
+  <div class="progress-bar"><div id="progress"></div></div>
+  <br>
+  <button id="trainBtn" onclick="startTraining()">Start Training</button>
+  <button id="saveBtn" onclick="saveModel()" disabled>Save Model</button>
+
+  <script>
+    const IMAGE_SIZE = 28 * 28;
+    const NUM_CLASSES = 10;
+    const NUM_DATASET_ELEMENTS = 65000;
+    const TRAIN_TEST_RATIO = 5 / 6;
+    const NUM_TRAIN_ELEMENTS = Math.floor(TRAIN_TEST_RATIO * NUM_DATASET_ELEMENTS);
+    const NUM_TEST_ELEMENTS = NUM_DATASET_ELEMENTS - NUM_TRAIN_ELEMENTS;
+    
+    // We'll just use a small subset to train quickly in the browser
+    const EPOCHS = 5;
+    const BATCH_SIZE = 128;
+    
+    let model;
+
+    function setStatus(msg, progress = -1) {
+      document.getElementById('status').innerText = msg;
+      if (progress >= 0) {
+        document.getElementById('progress').style.width = `${progress}%`;
+      }
+    }
+
+    // A simplified MNIST data loader for the browser
+    class MnistData {
+      constructor() {
+        this.shuffledTrainIndex = 0;
+        this.shuffledTestIndex = 0;
+      }
+
+      async load() {
+        setStatus('Downloading MNIST data (this may take a moment)...', 10);
+        // We use the Google storage MNIST dataset sprite
+        const img = new Image();
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const imgRequest = new Promise((resolve, reject) => {
+          img.crossOrigin = '';
+          img.onload = () => {
+            img.width = img.naturalWidth;
+            img.height = img.naturalHeight;
+            const datasetBytesBuffer = new ArrayBuffer(NUM_DATASET_ELEMENTS * IMAGE_SIZE * 4);
+            const chunkSize = 5000;
+            canvas.width = img.width;
+            canvas.height = chunkSize;
+            
+            for (let i = 0; i < NUM_DATASET_ELEMENTS / chunkSize; i++) {
+              const datasetBytesView = new Float32Array(
+                datasetBytesBuffer, i * IMAGE_SIZE * chunkSize * 4,
+                IMAGE_SIZE * chunkSize);
+              ctx.drawImage(
+                img, 0, i * chunkSize, img.width, chunkSize, 0, 0, img.width, chunkSize);
+              const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+              for (let j = 0; j < imageData.data.length / 4; j++) {
+                // All channels hold an equal value since the image is grayscale, so just read the red channel.
+                datasetBytesView[j] = imageData.data[j * 4] / 255;
+              }
+            }
+            this.datasetImages = new Float32Array(datasetBytesBuffer);
+            resolve();
+          };
+          img.src = 'https://storage.googleapis.com/learnjs-data/model-builder/mnist_images.png';
+        });
+
+        const labelsRequest = fetch('https://storage.googleapis.com/learnjs-data/model-builder/mnist_labels_uint8');
+        const [imgResponse, labelsResponse] = await Promise.all([imgRequest, labelsRequest]);
+        this.datasetLabels = new Uint8Array(await labelsResponse.arrayBuffer());
+
+        // Create shuffled indices
+        this.trainIndices = tf.util.createShuffledIndices(NUM_TRAIN_ELEMENTS);
+        this.testIndices = tf.util.createShuffledIndices(NUM_TEST_ELEMENTS);
+        
+        // Slice the arrays
+        this.trainImages = this.datasetImages.slice(0, IMAGE_SIZE * NUM_TRAIN_ELEMENTS);
+        this.testImages = this.datasetImages.slice(IMAGE_SIZE * NUM_TRAIN_ELEMENTS);
+        this.trainLabels = this.datasetLabels.slice(0, NUM_CLASSES * NUM_TRAIN_ELEMENTS);
+        this.testLabels = this.datasetLabels.slice(NUM_CLASSES * NUM_TRAIN_ELEMENTS);
+        
+        setStatus('MNIST data loaded.', 20);
+      }
+
+      getTrainData() {
+        const xs = tf.tensor4d(this.trainImages, [NUM_TRAIN_ELEMENTS, 28, 28, 1]);
+        const labels = tf.tensor2d(this.trainLabels, [NUM_TRAIN_ELEMENTS, NUM_CLASSES]);
+        return {xs, labels};
+      }
+
+      getTestData() {
+        const xs = tf.tensor4d(this.testImages, [NUM_TEST_ELEMENTS, 28, 28, 1]);
+        const labels = tf.tensor2d(this.testLabels, [NUM_TEST_ELEMENTS, NUM_CLASSES]);
+        return {xs, labels};
+      }
+    }
+
+    function createModel() {
+      const m = tf.sequential();
+      // Mimic HandwrittenCNN
+      m.add(tf.layers.conv2d({inputShape: [28, 28, 1], kernelSize: 3, filters: 32, activation: 'relu'}));
+      m.add(tf.layers.maxPooling2d({poolSize: 2}));
+      m.add(tf.layers.conv2d({kernelSize: 3, filters: 64, activation: 'relu'}));
+      m.add(tf.layers.maxPooling2d({poolSize: 2}));
+      m.add(tf.layers.flatten());
+      m.add(tf.layers.dropout({rate: 0.5}));
+      m.add(tf.layers.dense({units: 128, activation: 'relu'}));
+      m.add(tf.layers.dense({units: 10, activation: 'softmax'}));
+      
+      m.compile({
+        optimizer: 'adam',
+        loss: 'categoricalCrossentropy',
+        metrics: ['accuracy']
+      });
+      return m;
+    }
+
+    async function startTraining() {
+      document.getElementById('trainBtn').disabled = true;
+      
+      const data = new MnistData();
+      await data.load();
+      
+      model = createModel();
+      model.summary();
+      
+      const {xs, labels} = data.getTrainData();
+      const testData = data.getTestData();
+      
+      setStatus('Starting training...', 30);
+      
+      await model.fit(xs, labels, {
+        batchSize: BATCH_SIZE,
+        epochs: EPOCHS,
+        validationSplit: 0.1,
+        callbacks: {
+          onEpochEnd: async (epoch, logs) => {
+            const progress = 30 + (70 * ((epoch + 1) / EPOCHS));
+            setStatus(`Epoch ${epoch + 1}/${EPOCHS} - loss: ${logs.loss.toFixed(4)} - acc: ${logs.acc.toFixed(4)} - val_loss: ${logs.val_loss.toFixed(4)} - val_acc: ${logs.val_acc.toFixed(4)}`, progress);
+            await tf.nextFrame();
+          }
+        }
+      });
+      
+      setStatus('Evaluating on test set...', 95);
+      const evalResult = model.evaluate(testData.xs, testData.labels);
+      const testAcc = evalResult[1].dataSync()[0];
+      
+      setStatus(`Training complete! Test accuracy: ${(testAcc * 100).toFixed(2)}%`, 100);
+      
+      // Cleanup tensors
+      xs.dispose(); labels.dispose();
+      testData.xs.dispose(); testData.labels.dispose();
+      
+      document.getElementById('saveBtn').disabled = false;
+    }
+    
+    async function saveModel() {
+      setStatus('Saving model...');
+      await model.save('downloads://model');
+      setStatus('Model files downloaded! Please place them in the web/data/model directory.');
+    }
+  </script>
+</body>
+</html>
