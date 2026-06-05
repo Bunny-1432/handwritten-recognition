@@ -10,7 +10,7 @@ const InferenceModel = (() => {
   // These are actively maintained by TensorFlow team or hosted with permissive CORS
   const MODEL_URLS = [
     'data/model/model.json',                                                                 // Locally hosted model (offline/pre-trained)
-    'https://raw.githubusercontent.com/google/tfjs-mnist-workshop/master/model/model.json',  // Reliable remote fallback (supports file:// CORS)
+    'https://raw.githubusercontent.com/Bunny-1432/handwritten-recognition/main/web/data/model/model.json',  // Reliable remote fallback (supports file:// CORS)
   ];
   
   const DIGIT_CLASSES = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
