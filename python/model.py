@@ -286,7 +286,7 @@ if __name__ == "__main__":
     model = HandwrittenCNN(num_classes=10)
     x = torch.randn(4, 1, 28, 28)
     out = model(x)
-    print(f"\nForward pass: input {x.shape} → output {out.shape}")
+    print(f"\nForward pass: input {x.shape} -> output {out.shape}")
 
     # Test feature hook extraction
     model.register_feature_hooks()
