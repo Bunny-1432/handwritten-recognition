@@ -34,9 +34,7 @@ from model import HandwrittenCNN
 # ──────────────────────────────────────────────────────────────────────
 BATCH_SIZE: int = 128
 LEARNING_RATE: float = 0.001
-EPOCHS: int = 15
-SCHEDULER_STEP: int = 5
-SCHEDULER_GAMMA: float = 0.5
+EPOCHS: int = 25
 VAL_SPLIT: float = 0.1  # 10% of training data for validation
 NUM_CLASSES: int = 10
 RANDOM_SEED: int = 42
@@ -68,6 +66,8 @@ def get_transforms() -> Tuple[transforms.Compose, transforms.Compose]:
             transforms.RandomAffine(
                 degrees=0,
                 translate=(0.1, 0.1),
+                scale=(0.9, 1.1),
+                shear=(-10, 10),
             ),
             transforms.ToTensor(),
             transforms.Normalize(mean=(0.1307,), std=(0.3081,)),
@@ -257,9 +257,9 @@ def main() -> None:
 
     # Training setup
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
-    scheduler = optim.lr_scheduler.StepLR(
-        optimizer, step_size=SCHEDULER_STEP, gamma=SCHEDULER_GAMMA
+    optimizer = optim.AdamW(model.parameters(), lr=LEARNING_RATE, weight_decay=1e-4)
+    scheduler = optim.lr_scheduler.OneCycleLR(
+        optimizer, max_lr=LEARNING_RATE, steps_per_epoch=len(train_loader), epochs=EPOCHS
     )
 
     # ── Training loop ─────────────────────────────────────────────

@@ -67,9 +67,21 @@ const InferenceModel = (() => {
     
     try {
       // Dynamically reshape tensor to match model's expected input shape
-      const inputShape = model.inputs[0].shape;
-      const targetShape = [1, ...inputShape.slice(1)];
-      const reshapedTensor = tensor.reshape(targetShape);
+      const inputShape = model.inputs[0].shape; // e.g. [null, 784] or [null, 28, 28, 1]
+      
+      // Determine total elements expected (excluding batch dim)
+      const expectedElements = inputShape.slice(1).reduce((a, b) => a * b, 1);
+      const tensorElements = tensor.shape.slice(1).reduce((a, b) => a * b, 1);
+      
+      let reshapedTensor;
+      if (expectedElements === tensorElements) {
+        // Shapes are compatible — reshape to exactly what the model expects
+        const targetShape = [1, ...inputShape.slice(1)];
+        reshapedTensor = tensor.reshape(targetShape);
+      } else {
+        console.error(`Shape mismatch: model expects ${expectedElements} elements, tensor has ${tensorElements}`);
+        return null;
+      }
       
       const prediction = model.predict(reshapedTensor);
       const probabilities = await prediction.data();

@@ -8,7 +8,7 @@ Requires:
 import os
 import torch
 import torch.onnx
-from model import CharacterCNN
+from model import HandwrittenCNN
 
 def export_model(weights_path='models/mnist_cnn.pth', output_dir='../web/data/model'):
     if not os.path.exists(weights_path):
@@ -16,7 +16,7 @@ def export_model(weights_path='models/mnist_cnn.pth', output_dir='../web/data/mo
         return
 
     # Load Model
-    model = CharacterCNN(num_classes=10)
+    model = HandwrittenCNN(num_classes=10)
     model.load_state_dict(torch.load(weights_path, map_location=torch.device('cpu')))
     model.eval()
 

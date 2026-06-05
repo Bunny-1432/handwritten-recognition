@@ -52,41 +52,35 @@ class HandwrittenCNN(nn.Module):
 
         # --- Feature Extraction Blocks ---
 
-        # Conv Block 1: 1 → 32 channels, spatial: 28→14
+        # Conv Block 1: 1 → 64 channels, spatial: 28→14
         self.conv_block1 = nn.Sequential(
-            nn.Conv2d(
-                in_channels=1,
-                out_channels=32,
-                kernel_size=3,
-                padding=1,
-            ),
+            nn.Conv2d(in_channels=1, out_channels=32, kernel_size=3, padding=1),
             nn.BatchNorm2d(32),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=2, stride=2),
-        )
-
-        # Conv Block 2: 32 → 64 channels, spatial: 14→7
-        self.conv_block2 = nn.Sequential(
-            nn.Conv2d(
-                in_channels=32,
-                out_channels=64,
-                kernel_size=3,
-                padding=1,
-            ),
+            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1),
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=2, stride=2),
         )
 
-        # Conv Block 3: 64 → 128 channels, spatial: 7→7 (no pooling)
-        self.conv_block3 = nn.Sequential(
-            nn.Conv2d(
-                in_channels=64,
-                out_channels=128,
-                kernel_size=3,
-                padding=1,
-            ),
+        # Conv Block 2: 64 → 128 channels, spatial: 14→7
+        self.conv_block2 = nn.Sequential(
+            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, padding=1),
             nn.BatchNorm2d(128),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+        )
+
+        # Conv Block 3: 128 → 256 channels, spatial: 7→7 (no pooling)
+        self.conv_block3 = nn.Sequential(
+            nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, padding=1),
+            nn.BatchNorm2d(256),
             nn.ReLU(inplace=True),
         )
 
@@ -96,10 +90,10 @@ class HandwrittenCNN(nn.Module):
         # --- Classification Head ---
         self.classifier = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(128 * 3 * 3, 256),
+            nn.Linear(256 * 3 * 3, 512),
             nn.ReLU(inplace=True),
             nn.Dropout(p=0.5),
-            nn.Linear(256, num_classes),
+            nn.Linear(512, num_classes),
         )
 
         # Storage for feature map extraction via hooks
@@ -157,112 +151,20 @@ class HandwrittenCNN(nn.Module):
         )
 
         layers: List[Dict[str, Any]] = [
-            {
-                "name": "Input",
-                "type": "input",
-                "output_shape": [1, 28, 28],
-                "params": 0,
-            },
-            {
-                "name": "Conv1",
-                "type": "conv",
-                "output_shape": [32, 28, 28],
-                "params": self._count_params(self.conv_block1[0]),
-                "kernel": "3x3",
-            },
-            {
-                "name": "BatchNorm1",
-                "type": "batchnorm",
-                "output_shape": [32, 28, 28],
-                "params": self._count_params(self.conv_block1[1]),
-            },
-            {
-                "name": "ReLU1",
-                "type": "activation",
-                "output_shape": [32, 28, 28],
-                "params": 0,
-            },
-            {
-                "name": "MaxPool1",
-                "type": "pool",
-                "output_shape": [32, 14, 14],
-                "params": 0,
-            },
-            {
-                "name": "Conv2",
-                "type": "conv",
-                "output_shape": [64, 14, 14],
-                "params": self._count_params(self.conv_block2[0]),
-                "kernel": "3x3",
-            },
-            {
-                "name": "BatchNorm2",
-                "type": "batchnorm",
-                "output_shape": [64, 14, 14],
-                "params": self._count_params(self.conv_block2[1]),
-            },
-            {
-                "name": "ReLU2",
-                "type": "activation",
-                "output_shape": [64, 14, 14],
-                "params": 0,
-            },
-            {
-                "name": "MaxPool2",
-                "type": "pool",
-                "output_shape": [64, 7, 7],
-                "params": 0,
-            },
-            {
-                "name": "Conv3",
-                "type": "conv",
-                "output_shape": [128, 7, 7],
-                "params": self._count_params(self.conv_block3[0]),
-                "kernel": "3x3",
-            },
-            {
-                "name": "BatchNorm3",
-                "type": "batchnorm",
-                "output_shape": [128, 7, 7],
-                "params": self._count_params(self.conv_block3[1]),
-            },
-            {
-                "name": "ReLU3",
-                "type": "activation",
-                "output_shape": [128, 7, 7],
-                "params": 0,
-            },
-            {
-                "name": "AdaptivePool",
-                "type": "pool",
-                "output_shape": [128, 3, 3],
-                "params": 0,
-            },
-            {
-                "name": "Flatten",
-                "type": "flatten",
-                "output_shape": [1152],
-                "params": 0,
-            },
-            {
-                "name": "FC1",
-                "type": "dense",
-                "output_shape": [256],
-                "params": self._count_params(self.classifier[1]),
-            },
-            {
-                "name": "Dropout",
-                "type": "dropout",
-                "output_shape": [256],
-                "params": 0,
-                "rate": 0.5,
-            },
-            {
-                "name": "FC2",
-                "type": "dense",
-                "output_shape": [self.num_classes],
-                "params": self._count_params(self.classifier[4]),
-            },
+            {"name": "Input", "type": "input", "output_shape": [1, 28, 28], "params": 0},
+            {"name": "Conv1_1", "type": "conv", "output_shape": [32, 28, 28], "params": self._count_params(self.conv_block1[0])},
+            {"name": "Conv1_2", "type": "conv", "output_shape": [64, 28, 28], "params": self._count_params(self.conv_block1[3])},
+            {"name": "MaxPool1", "type": "pool", "output_shape": [64, 14, 14], "params": 0},
+            {"name": "Conv2_1", "type": "conv", "output_shape": [128, 14, 14], "params": self._count_params(self.conv_block2[0])},
+            {"name": "Conv2_2", "type": "conv", "output_shape": [128, 14, 14], "params": self._count_params(self.conv_block2[3])},
+            {"name": "MaxPool2", "type": "pool", "output_shape": [128, 7, 7], "params": 0},
+            {"name": "Conv3_1", "type": "conv", "output_shape": [256, 7, 7], "params": self._count_params(self.conv_block3[0])},
+            {"name": "Conv3_2", "type": "conv", "output_shape": [256, 7, 7], "params": self._count_params(self.conv_block3[3])},
+            {"name": "AdaptivePool", "type": "pool", "output_shape": [256, 3, 3], "params": 0},
+            {"name": "Flatten", "type": "flatten", "output_shape": [2304], "params": 0},
+            {"name": "FC1", "type": "dense", "output_shape": [512], "params": self._count_params(self.classifier[1])},
+            {"name": "Dropout", "type": "dropout", "output_shape": [512], "params": 0, "rate": 0.5},
+            {"name": "FC2", "type": "dense", "output_shape": [self.num_classes], "params": self._count_params(self.classifier[4])},
         ]
 
         return {
