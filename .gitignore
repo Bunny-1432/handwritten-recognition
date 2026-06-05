@@ -40,3 +40,13 @@ build/
 # Logs
 *.log
 logs/
+
+# Node.js (for train_mnist_node.js)
+node_modules/
+python/node_modules/
+python/package.json
+python/package-lock.json
+
+# MNIST dataset cache (downloaded by training script)
+python/.mnist_cache/
+.mnist_cache/
