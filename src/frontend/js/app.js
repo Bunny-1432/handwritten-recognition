@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (demoSection) {
       const warn = document.createElement('div');
       warn.style.cssText = 'background: #fee2e2; color: #b91c1c; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 0.9rem;';
-      warn.textContent = '⚠️ Model failed to load. Run the app with a local server (npm run dev) and check the console for details.';
+      warn.textContent = `⚠️ Model failed to load: ${e.message || e}. Check the console for details.`;
       demoSection.querySelector('.container').prepend(warn);
     }
   }

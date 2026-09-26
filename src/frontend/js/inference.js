@@ -36,10 +36,25 @@ const ModelInference = (() => {
             // Configure ONNX Runtime WebAssembly backend
             ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/';
 
-            session = await ort.InferenceSession.create(modelPath, {
+            // Fetch the model binary directly
+            const response = await fetch(modelPath);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status} (${response.statusText}) loading ${modelPath}`);
+            }
+            const buffer = await response.arrayBuffer();
+
+            // Validate that we received a real binary ONNX model (not an LFS pointer stub)
+            if (buffer.byteLength < 1000) {
+                const text = new TextDecoder().decode(buffer);
+                if (text.includes('git-lfs')) {
+                    throw new Error('Downloaded a Git LFS pointer stub instead of binary ONNX model.');
+                }
+            }
+
+            session = await ort.InferenceSession.create(buffer, {
                 executionProviders: ['wasm']
             });
-            console.log(`[Inference] ✅ Loaded ${dataset} model from ${modelPath}`);
+            console.log(`[Inference] ✅ Loaded ${dataset} model (${(buffer.byteLength / 1024 / 1024).toFixed(2)} MB)`);
             console.log('[Inference] Input names:', session.inputNames);
             console.log('[Inference] Output names:', session.outputNames);
             return true;
