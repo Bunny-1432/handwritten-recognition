@@ -1,0 +1,13 @@
+{
+  "name": "neuroscribe-handwritten-recognition",
+  "version": "1.0.0",
+  "description": "CNN-based handwritten character recognition with MNIST & EMNIST support",
+  "scripts": {
+    "dev": "npx serve src/frontend -p 3000 --cors",
+    "serve": "npx serve src/frontend -p 3000 --cors",
+    "start": "npx serve src/frontend -p 3000 --cors"
+  },
+  "keywords": ["handwriting", "recognition", "CNN", "ONNX", "MNIST"],
+  "author": "",
+  "license": "MIT"
+}

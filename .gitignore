@@ -1,0 +1,57 @@
+# Python virtual environments
+python/.venv/
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# PyTorch model weights (large binary files)
+*.pth
+*.pt
+*.onnx
+# But allow the frontend ONNX models needed for the live demo
+!src/frontend/data/model/*.onnx
+
+# TF SavedModel directory (generated during export)
+tf_saved_model/
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Logs
+*.log
+logs/
+
+# Node.js (for train_mnist_node.js)
+node_modules/
+python/node_modules/
+python/package.json
+python/package-lock.json
+
+# MNIST dataset cache (downloaded by training script)
+python/.mnist_cache/
+.mnist_cache/
+
+# Raw downloaded training datasets (large files, re-downloadable)
+data/raw/
