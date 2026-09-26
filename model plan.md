@@ -1,7 +1,4 @@
 # Plan: Investigate Model Prediction Issues
-
-The user reports that the models are not predicting correctly and always return the same output. I need to identify mismatches between frontend preprocessing and backend training.
-
 ## Analysis of Current Findings
 
 ### 1. Frontend Preprocessing (`src/frontend/js/canvas.js`)
