@@ -47,11 +47,13 @@ NeuroScribe is a production-grade deep learning system designed to recognize han
    ```
 
 ### Frontend (Deployment)
-1. Serve the `src/frontend` directory using any static server:
-   ```bash
-   npx serve src/frontend
-   ```
-2. Open `index.html` in your browser.
+- **Live Demo (GitHub Pages)**: [https://bunny-1432.github.io/handwritten-recognition/](https://bunny-1432.github.io/handwritten-recognition/)
+- **Local Server**:
+  ```bash
+  npm run dev
+  # → http://localhost:3000
+  ```
+
 
 ## 🧠 Technical Specification
 
